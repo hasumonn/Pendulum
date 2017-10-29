@@ -268,14 +268,40 @@ def SimWorld():
     damp4 = link4.omega * 0.5
 
     ground.posn[1] = boardY
-    bottom = link4.posn - r4 - 0.2
+    bottom4 = link4.posn - r4 - 0.2
+    bottom3 = link3.posn - r3 - 0.2
+    bottom2 = link2.posn - r2 - 0.2
+    bottom1 = link1.posn - r1 - 0.2
 
-    penalty = 80.0*(ground.posn[1] - bottom[1]) - 20.0* link4.vel[1]
-    if ground.posn[1] > bottom[1]:
+    penalty4 = 80.0 * (ground.posn[1] - bottom4[1]) - 20.0* link4.vel[1]
+    penalty3 = 80.0 * (ground.posn[1] - bottom3[1]) - 20.0 * link3.vel[1]
+    penalty2 = 80.0 * (ground.posn[1] - bottom2[1]) - 20.0 * link2.vel[1]
+    penalty1 = 80.0 * (ground.posn[1] - bottom1[1]) - 20.0 * link1.vel[1]
+
+    if ground.posn[1] > bottom4[1]:
         ground.color = [0.9,0.9,0.9]
     else:
         ground.color = [0.85, 0.85, 0.85]
-        penalty = 0
+        penalty4 = 0
+
+    if ground.posn[1] > bottom3[1]:
+        ground.color = [0.9,0.9,0.9]
+    else:
+        ground.color = [0.85, 0.85, 0.85]
+        penalty3 = 0
+
+    if ground.posn[1] > bottom2[1]:
+        ground.color = [0.9,0.9,0.9]
+    else:
+        ground.color = [0.85, 0.85, 0.85]
+        penalty2 = 0
+
+    if ground.posn[1] > bottom1[1]:
+        ground.color = [0.9,0.9,0.9]
+    else:
+        ground.color = [0.85, 0.85, 0.85]
+        penalty1= 0
+
     # print(penalty)
 
     #                1      2      3      4        A      B       C        D
@@ -301,7 +327,7 @@ def SimWorld():
                   [0,0,0,   0,0,0,  -1,0,-r3y,1,0,-r4y, 0,0,   0,0,    0,0,    0,0], #D
                   [0,0,0,   0,0,0,  0,-1,r3x, 0,1,r4x,  0,0,   0,0,    0,0,    0,0]])
 
-    b = np.array([0,-10,-damp1, 0,-10,-damp2, 0,-10,-damp3, 0,-10+penalty, -damp4 - r4x * penalty, t1x,t1y, t2x,t2y, t3x,t3y, t4x,t4y])
+    b = np.array([0,-10+penalty1,-damp1- r1x * penalty1, 0,-10+penalty2,-damp2- r2x * penalty2, 0,-10+penalty3,-damp3- r3x * penalty3, 0,-10+penalty4, -damp4 - r4x * penalty4, t1x,t1y, t2x,t2y, t3x,t3y, t4x,t4y])
 
     x = np.linalg.solve(a, b)
 
@@ -345,18 +371,18 @@ def SimWorld():
     rax = ra[0]
     ray = ra[1]
 
-    dampA = alone.omega * 0.03
+    dampA = alone.omega * 0.04
 
-    constraintA = 1 * (alone.posn + ra - [0, 0, 0]) + 0.05 * (np.cross([0, 0, alone.omega], ra) - alone.vel)
+    constraintA = 2 * (alone.posn + ra - [0, 0, 0]) + 0.002 * (np.cross([0, 0, alone.omega], ra) - alone.vel)
     tax = -rax * alone.omega * alone.omega + constraintA[0]
     tay = -ray * alone.omega * alone.omega + constraintA[1]
 
     aa = np.array([[1, 0, 0, -1, 0],
                    [0, 1, 0, 0, -1],
-                   [0, 0, I, -ray, rax],
+                   [0, 0, I, ray,-rax],
                    [-1, 0, ray, 0, 0],
                    [0, -1, -rax, 0, 0]])
-    ab = np.array([0, -10, dampA, tax, tay])
+    ab = np.array([0, -10, -dampA, tax, tay])
     ax = np.linalg.solve(aa, ab)
 
     accA = np.array([ax[0], ax[1], 0])  ### linear acceleration = [0, -G, 0]
@@ -396,6 +422,8 @@ def DrawWorld():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  # Clear The Screen And The Depth Buffer
     glLoadIdentity();
     gluLookAt(2.5, -2.0, 9.0,   0, -2.5, 0,    0, 1, 0)
+    # gluLookAt(2.5, 5.0, 9.0,   0, -2.5, 0,    0, 1, 0)
+
 
     DrawOrigin()
 
