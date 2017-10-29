@@ -13,6 +13,8 @@ simTime = 0
 dT = 0.01
 simRun = True
 RAD_TO_DEG = 180.0 / 3.1416
+multi = 0
+boardY = 0
 
 
 #####################################################
@@ -58,8 +60,8 @@ class Bar:
 #  #### Bar class, i.e., for dynamic illustration
 #####################################################
 class Ground:
-    color = [0.6, 0.4, 0.2]
-    size = [5, 0.01, 5]
+    color = [0.1, 0.1, 0.7]
+    size = [7, 0.02, 7]
     posn = np.array([0.0, -3.5, 0.0])
 
     def draw(self):
@@ -80,11 +82,15 @@ def main():
     global link1, link2, link3, link4, alone
     global kBar, pBar
     global ground
+    global multi
+
+    multi = 0
+
     glutInit(sys.argv)
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)  # display mode
     glutInitWindowSize(640, 480)  # window size
     glutInitWindowPosition(0, 0)  # window coords for mouse start at top-left
-    window = glutCreateWindow("CPSC 526 Simulation Template")
+    window = glutCreateWindow("Lotus' Pendulum")
     glutDisplayFunc(DrawWorld)  # register the function to draw the world
     # glutFullScreen()               # full screen
     glutIdleFunc(SimWorld)  # when doing nothing, redraw the scene
@@ -118,6 +124,7 @@ def resetSim():
     global kBar, pBar
     global simTime, simRun
     global ground
+    global boardY
 
     printf("Simulation reset\n")
     simRun = True
@@ -131,42 +138,43 @@ def resetSim():
     alone.omega = 0.0  ## radians per second
 
     link1.size = [0.04, 1.0, 0.12]
-    link1.color = [1, 0.9, 0.9]
+    link1.color = [0.85, 0.9, 1.0]
     link1.vel = np.array([0.0, 0.0, 0.0])
     link1.theta = math.pi * 3/4
     link1.posn = [0,0,0] + np.array([-0.5 * math.sin(link1.theta), 0.5 * math.cos(link1.theta), 0.0])
     link1.omega = 0.0  ## radians per second
 
     link2.size = [0.04, 1.0, 0.12]
-    link2.color = [1, 0.9, 0.9]
+    link2.color = [0.65, 0.79, 0.99]
     link2.theta = math.pi * 3/4
-    link2.posn = link1.posn + np.array([-math.sin(link1.theta), math.cos(link1.theta), 0.0])
     link2.vel = np.array([0.0, 0.0, 0.0])
+    link2.posn = link1.posn + np.array([-math.sin(link1.theta), math.cos(link1.theta), 0.0])
     link2.omega = 0.0  ## radians per second
 
     link3.size = [0.04, 1.0, 0.12]
-    link3.color = [1, 0.9, 0.9]
+    link3.color = [0.45, 0.66, 0.98]
     link3.theta = math.pi * 3/4
     link3.posn = link2.posn + np.array([-math.sin(link2.theta), math.cos(link2.theta), 0.0])
     link3.vel = np.array([0.0, 0.0, 0.0])
     link3.omega = 0.0  ## radians per second
 
     link4.size = [0.04, 1.0, 0.12]
-    link4.color = [1, 0.9, 0.9]
+    link4.color = [0.3, 0.55, 0.95]
     link4.theta = math.pi * 3 / 4
     link4.posn = link3.posn + np.array([-math.sin(link3.theta), math.cos(link3.theta), 0.0])
     link4.vel = np.array([0.0, 0.0, 0.0])
     link4.omega = 0.0  ## radians per second
 
     kBar.color = [0.6, 0.7, 0.8]
-    kBar.size = [0.1, 0.4, 0.1]
-    kBar.posn = np.array([-0.8, 0.1, 0.9])
+    kBar.size = [0.2, 0.4, 0.2]
+    kBar.posn = np.array([1.0, -3.5, 6.5])
 
-    pBar.color = [0.6, 0.9, 0.7]
-    pBar.size = [0.1, 0.4, 0.1]
+    pBar.color = [0.6, 0.9, 0.65]
+    pBar.size = [0.2, 0.4, 0.2]
     pBar.posn = np.array([kBar.posn[0], kBar.size[1], kBar.posn[2]])
 
-    ground.color = [0.6, 0.4, 0.2]
+    ground.color = [0.3, 0.3, 0.7]
+    boardY = ground.posn[1]
 
 #####################################################
 #### keyPressed():  called whenever a key is pressed
@@ -174,6 +182,9 @@ def resetSim():
 
 def keyPressed(key, x, y):
     global simRun
+    global multi
+    global boardY
+
     ch = key.decode("utf-8")
     if ch == ' ':  #### toggle the simulation
         if (simRun == True):
@@ -186,6 +197,17 @@ def keyPressed(key, x, y):
         sys.exit()
     elif ch == 'r':  #### reset simulation
         resetSim()
+    elif ch == 'n':  #### reset simulation
+        multi = 0
+        resetSim()
+    elif ch == 'm':  #### reset simulation
+        multi = 1
+        resetSim()
+    elif ch == 'w':  #### reset simulation
+        boardY += 1
+    elif ch == 's':  #### reset simulation
+        boardY -= 1
+
 
 
 #####################################################
@@ -195,6 +217,8 @@ def keyPressed(key, x, y):
 def SimWorld():
     global simTime, dT, simRun
     global link1, link2, link3, link4, alone
+    global boardY
+
     I = 1.0/12.0
 
     deltaTheta = 2.4
@@ -226,8 +250,8 @@ def SimWorld():
     constraint3 =1*(link3.posn + r3 - (link2.posn - r2))+ 0.01*(np.cross([0,0,link3.omega], r3) - link3.vel)
     constraint4 =1*(link4.posn + r4 - (link3.posn - r3))+ 0.01*(np.cross([0,0,link4.omega], r4) - link4.vel)
 
-    t1x = -r1x * link1.omega * link1.omega - constraint1[0]
-    t1y = -r1y * link1.omega * link1.omega - constraint1[1]
+    t1x = -r1x * link1.omega * link1.omega + constraint1[0]
+    t1y = -r1y * link1.omega * link1.omega + constraint1[1]
 
     t2x = r1x * link1.omega * link1.omega + r2x * link2.omega * link2.omega - constraint2[0]
     t2y = r1y * link1.omega * link1.omega + r2y * link2.omega * link2.omega - constraint2[1]
@@ -238,18 +262,19 @@ def SimWorld():
     t4x = r3x * link3.omega * link3.omega + r4x * link4.omega * link4.omega - constraint4[0]
     t4y = r3y * link3.omega * link3.omega + r4y * link4.omega * link4.omega - constraint4[1]
 
-    damp1 = link1.omega * 0.05
-    damp2 = link2.omega * 0.05
-    damp3 = link3.omega * 0.05
-    damp4 = link4.omega * 0.05
+    damp1 = link1.omega * 0.5
+    damp2 = link2.omega * 0.5
+    damp3 = link3.omega * 0.5
+    damp4 = link4.omega * 0.5
 
+    ground.posn[1] = boardY
     bottom = link4.posn - r4 - 0.2
 
     penalty = 80.0*(ground.posn[1] - bottom[1]) - 20.0* link4.vel[1]
     if ground.posn[1] > bottom[1]:
-        ground.color = [1,0,0]
+        ground.color = [0.9,0.9,0.9]
     else:
-        ground.color = [0.6, 0.4, 0.2]
+        ground.color = [0.85, 0.85, 0.85]
         penalty = 0
     # print(penalty)
 
@@ -276,7 +301,7 @@ def SimWorld():
                   [0,0,0,   0,0,0,  -1,0,-r3y,1,0,-r4y, 0,0,   0,0,    0,0,    0,0], #D
                   [0,0,0,   0,0,0,  0,-1,r3x, 0,1,r4x,  0,0,   0,0,    0,0,    0,0]])
 
-    b = np.array([0,-10,damp1, 0,-10,damp2, 0,-10,damp3, 0,-10+penalty, damp4 - r4x * penalty, t1x,t1y, t2x,t2y, t3x,t3y, t4x,t4y])
+    b = np.array([0,-10,-damp1, 0,-10,-damp2, 0,-10,-damp3, 0,-10+penalty, -damp4 - r4x * penalty, t1x,t1y, t2x,t2y, t3x,t3y, t4x,t4y])
 
     x = np.linalg.solve(a, b)
 
@@ -320,17 +345,17 @@ def SimWorld():
     rax = ra[0]
     ray = ra[1]
 
-    dampA = alone.omega * 0.05
+    dampA = alone.omega * 0.03
 
-    constraintA = 1 * (alone.posn + ra - [0, 0, 0]) + 0.01 * (np.cross([0, 0, alone.omega], ra) - alone.vel)
-    tax = rax * alone.omega * alone.omega - constraintA[0]
-    tay = ray * alone.omega * alone.omega - constraintA[1]
+    constraintA = 1 * (alone.posn + ra - [0, 0, 0]) + 0.05 * (np.cross([0, 0, alone.omega], ra) - alone.vel)
+    tax = -rax * alone.omega * alone.omega + constraintA[0]
+    tay = -ray * alone.omega * alone.omega + constraintA[1]
 
     aa = np.array([[1, 0, 0, -1, 0],
                    [0, 1, 0, 0, -1],
                    [0, 0, I, -ray, rax],
-                   [1, 0, -ray, 0, 0],
-                   [0, 1, rax, 0, 0]])
+                   [-1, 0, ray, 0, 0],
+                   [0, -1, -rax, 0, 0]])
     ab = np.array([0, -10, dampA, tax, tay])
     ax = np.linalg.solve(aa, ab)
 
@@ -344,15 +369,15 @@ def SimWorld():
     alone.omega += omega_dotA * dT
 
     # PE = mgh
-    pe = 10*(alone.posn[1] + 1.0)
+    pe = 10*(alone.posn[1] +0.55)
     # KE = 0.5(I + md^2)w^2
     ke = 0.5*(0.25/3.0 + 0.25)*alone.omega*alone.omega
 
-    pBar.size[1] = 0.01* pe
-    pBar.posn[1] = pBar.size[1] * 0.5
+    pBar.size[1] = 0.1* pe
+    pBar.posn[1] = pBar.size[1] * 0.5 -2.8
 
-    kBar.size[1] = 0.01* ke
-    kBar.posn[1] = pBar.size[1] + kBar.size[1] * 0.5
+    kBar.size[1] = 0.1* ke
+    kBar.posn[1] = pBar.size[1] + kBar.size[1] * 0.5 -2.8
 
     simTime += dT
 
@@ -370,20 +395,20 @@ def DrawWorld():
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  # Clear The Screen And The Depth Buffer
     glLoadIdentity();
-    gluLookAt(2.5, -2.0, 8.0,   0, -3, 0,    0, 1, 0)
+    gluLookAt(2.5, -2.0, 9.0,   0, -2.5, 0,    0, 1, 0)
 
     DrawOrigin()
-    link1.draw()
-    link2.draw()
-    link3.draw()
-    link4.draw()
 
-    alone.draw()
-
-    kBar.draw()
-    pBar.draw()
-
-    ground.draw()
+    if multi == 0:
+        alone.draw()
+        kBar.draw()
+        pBar.draw()
+    else:
+        link1.draw()
+        link2.draw()
+        link3.draw()
+        link4.draw()
+        ground.draw()
 
     glutSwapBuffers()  # swap the buffers to display what was just drawn
 
@@ -393,7 +418,7 @@ def DrawWorld():
 #####################################################
 
 def InitGL(Width, Height):  # We call this right after our OpenGL window is created.
-    glClearColor(1.0, 1.0, 0.9, 0.0)  # This Will Clear The Background Color To Black
+    glClearColor(1.0, 1.0, 1.0, 0.0)  # This Will Clear The Background Color To Black
     glClearDepth(1.0)  # Enables Clearing Of The Depth Buffer
     glDepthFunc(GL_LESS)  # The Type Of Depth Test To Do
     glEnable(GL_DEPTH_TEST)  # Enables Depth Testing
@@ -429,19 +454,19 @@ def ReSizeGLScene(Width, Height):
 def DrawOrigin():
     glLineWidth(3.0);
 
-    glColor3f(1, 0.5, 0.5)  ## light red x-axis
+    glColor3f(0.65, 0.65, 0.65)  ## light red x-axis
     glBegin(GL_LINES)
     glVertex3f(0, 0, 0)
     glVertex3f(1, 0, 0)
     glEnd()
 
-    glColor3f(0.5, 1, 0.5)  ## light green y-axis
+    glColor3f(0.5, 0.5, 0.5)  ## light green y-axis
     glBegin(GL_LINES)
     glVertex3f(0, 0, 0)
     glVertex3f(0, 1, 0)
     glEnd()
 
-    glColor3f(0.5, 0.5, 1)  ## light blue z-axis
+    glColor3f(0.8, 0.8, 0.8)  ## light blue z-axis
     glBegin(GL_LINES)
     glVertex3f(0, 0, 0)
     glVertex3f(0, 0, 1)
