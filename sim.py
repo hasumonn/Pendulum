@@ -31,8 +31,40 @@ class Link:
 
     def draw(self):  ### steps to draw a link
         glPushMatrix()  ## save copy of coord frame
-        # glTranslatef(self.posn[0], self.posn[1], self.posn[2])  ## move
+        glTranslatef(self.posn[0], self.posn[1], self.posn[2])  ## move
         glRotatef(self.theta * RAD_TO_DEG, 0, 0, 1)  ## rotate
+        glScale(self.size[0], self.size[1], self.size[2])  ## set size
+        glColor3f(self.color[0], self.color[1], self.color[2])  ## set colour
+        DrawCube()  ## draw a scaled cube
+        glPopMatrix()  ## restore old coord frame
+
+#####################################################
+# #### Bar class, i.e., for dynamic illustration
+#####################################################
+class Bar:
+    color = [0, 0, 0]
+    size = [1, 1, 1]
+    posn = np.array([5.0, 0.0, 0.0])
+
+    def draw(self):
+        glPushMatrix()  ## save copy of coord frame
+        glTranslatef(self.posn[0], self.posn[1], self.posn[2])  ## move
+        glScale(self.size[0], self.size[1], self.size[2])  ## set size
+        glColor3f(self.color[0], self.color[1], self.color[2])  ## set colour
+        DrawCube()  ## draw a scaled cube
+        glPopMatrix()  ## restore old coord frame
+
+#####################################################
+#  #### Bar class, i.e., for dynamic illustration
+#####################################################
+class Ground:
+    color = [0.6, 0.4, 0.2]
+    size = [5, 0.01, 5]
+    posn = np.array([0.0, -3.5, 0.0])
+
+    def draw(self):
+        glPushMatrix()  ## save copy of coord frame
+        glTranslatef(self.posn[0], self.posn[1], self.posn[2])  ## move
         glScale(self.size[0], self.size[1], self.size[2])  ## set size
         glColor3f(self.color[0], self.color[1], self.color[2])  ## set colour
         DrawCube()  ## draw a scaled cube
@@ -45,7 +77,9 @@ class Link:
 
 def main():
     global window
-    global link1, link2
+    global link1, link2, link3, link4, alone
+    global kBar, pBar
+    global ground
     glutInit(sys.argv)
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH)  # display mode
     glutInitWindowSize(640, 480)  # window size
@@ -59,7 +93,17 @@ def main():
     InitGL(640, 480)  # initialize window
 
     link1 = Link();
-    # link2 = Link();
+    link2 = Link();
+    link3 = Link();
+    link4 = Link();
+
+    alone = Link();
+
+    kBar = Bar()
+    pBar = Bar()
+
+    ground = Ground();
+
     resetSim()
 
     glutMainLoop()  # start event processing loop
@@ -70,27 +114,59 @@ def main():
 #####################################################
 
 def resetSim():
-    global link1, link2
+    global link1, link2, link3, link4
+    global kBar, pBar
     global simTime, simRun
+    global ground
 
     printf("Simulation reset\n")
     simRun = True
     simTime = 0
 
+    alone.size = [0.04, 1.0, 0.12]
+    alone.color = [0.5, 0.9, 0.9]
+    alone.vel = np.array([0.0, 0.0, 0.0])
+    alone.theta = math.pi * 3/4
+    alone.posn = np.array([-0.5 * math.sin(alone.theta), 0.5 * math.cos(alone.theta), 0.0])
+    alone.omega = 0.0  ## radians per second
+
     link1.size = [0.04, 1.0, 0.12]
     link1.color = [1, 0.9, 0.9]
-    link1.posn = np.array([0.0, 0.0, 0.0])
-    link1.vel = np.array([0.0, 2.0, 0.0])
-    link1.theta = 0.4
-    link1.omega = 3  ## radians per second
+    link1.vel = np.array([0.0, 0.0, 0.0])
+    link1.theta = math.pi * 3/4
+    link1.posn = [0,0,0] + np.array([-0.5 * math.sin(link1.theta), 0.5 * math.cos(link1.theta), 0.0])
+    link1.omega = 0.0  ## radians per second
 
-    # link2.size = [0.04, 1.0, 0.12]
-    # link2.color = [0.9, 0.9, 1.0]
-    # link2.posn = np.array([1.0, 0.0, 0.0])
-    # link2.vel = np.array([0.0, 4.0, 0.0])
-    # link2.theta = -0.2
-    # link2.omega = 0  ## radians per second
+    link2.size = [0.04, 1.0, 0.12]
+    link2.color = [1, 0.9, 0.9]
+    link2.theta = math.pi * 3/4
+    link2.posn = link1.posn + np.array([-math.sin(link1.theta), math.cos(link1.theta), 0.0])
+    link2.vel = np.array([0.0, 0.0, 0.0])
+    link2.omega = 0.0  ## radians per second
 
+    link3.size = [0.04, 1.0, 0.12]
+    link3.color = [1, 0.9, 0.9]
+    link3.theta = math.pi * 3/4
+    link3.posn = link2.posn + np.array([-math.sin(link2.theta), math.cos(link2.theta), 0.0])
+    link3.vel = np.array([0.0, 0.0, 0.0])
+    link3.omega = 0.0  ## radians per second
+
+    link4.size = [0.04, 1.0, 0.12]
+    link4.color = [1, 0.9, 0.9]
+    link4.theta = math.pi * 3 / 4
+    link4.posn = link3.posn + np.array([-math.sin(link3.theta), math.cos(link3.theta), 0.0])
+    link4.vel = np.array([0.0, 0.0, 0.0])
+    link4.omega = 0.0  ## radians per second
+
+    kBar.color = [0.6, 0.7, 0.8]
+    kBar.size = [0.1, 0.4, 0.1]
+    kBar.posn = np.array([-0.8, 0.1, 0.9])
+
+    pBar.color = [0.6, 0.9, 0.7]
+    pBar.size = [0.1, 0.4, 0.1]
+    pBar.posn = np.array([kBar.posn[0], kBar.size[1], kBar.posn[2]])
+
+    ground.color = [0.6, 0.4, 0.2]
 
 #####################################################
 #### keyPressed():  called whenever a key is pressed
@@ -118,35 +194,102 @@ def keyPressed(key, x, y):
 
 def SimWorld():
     global simTime, dT, simRun
-    global link1, link2
+    global link1, link2, link3, link4, alone
+    I = 1.0/12.0
 
     deltaTheta = 2.4
     if (simRun == False):  ## is simulation stopped?
         return
 
-    ####  for the constrained one-link pendulum, and the 4-link pendulum,
-    ####  you will want to build the equations of motion as a linear system, and then solve that.
-    ####  Here is a simple example of using numpy to solve a linear system.
-    r_x = 0.5 * math.sin(link1.theta)
-    r_y = -0.5 * math.cos(link1.theta)
-    t_x = r_x * link1.omega * link1.omega
-    t_y = r_y * link1.omega * link1.omega
+###############################
+#### For 4-link
+###############################
 
-    a = np.array([[1, 0, 0, -1, 0],
-                  [0, 1, 0, 0, -1],
-                  [0, 0, 1.0/12.0, -r_y, r_x],
-                  [1, 0, -r_y, 0, 0],
-                  [0, 1, r_x, 0, 0]])
-    b = np.array([0, -10, 0, t_x, t_y])
+    r1 = [0.5 * math.sin(link1.theta),-0.5 * math.cos(link1.theta),0]
+    r1x = r1[0]
+    r1y = r1[1]
+
+    r2 = [0.5 * math.sin(link2.theta),-0.5 * math.cos(link2.theta),0]
+    r2x = r2[0]
+    r2y = r2[1]
+
+    r3 = [0.5 * math.sin(link3.theta),-0.5 * math.cos(link3.theta),0]
+    r3x = r3[0]
+    r3y = r3[1]
+
+    r4 = [0.5 * math.sin(link4.theta),-0.5 * math.cos(link4.theta),0]
+    r4x = r4[0]
+    r4y = r4[1]
+
+    constraint1 =1*(link1.posn + r1 - [0,0,0])+ 0.01*(np.cross([0,0,link1.omega], r1) - link1.vel)
+    constraint2 =1*(link2.posn + r2 - (link1.posn - r1))+ 0.01*(np.cross([0,0,link2.omega], r2) - link2.vel)
+    constraint3 =1*(link3.posn + r3 - (link2.posn - r2))+ 0.01*(np.cross([0,0,link3.omega], r3) - link3.vel)
+    constraint4 =1*(link4.posn + r4 - (link3.posn - r3))+ 0.01*(np.cross([0,0,link4.omega], r4) - link4.vel)
+
+    t1x = -r1x * link1.omega * link1.omega - constraint1[0]
+    t1y = -r1y * link1.omega * link1.omega - constraint1[1]
+
+    t2x = r1x * link1.omega * link1.omega + r2x * link2.omega * link2.omega - constraint2[0]
+    t2y = r1y * link1.omega * link1.omega + r2y * link2.omega * link2.omega - constraint2[1]
+
+    t3x = r2x * link2.omega * link2.omega + r3x * link3.omega * link3.omega - constraint3[0]
+    t3y = r2y * link2.omega * link2.omega + r3y * link3.omega * link3.omega - constraint3[1]
+
+    t4x = r3x * link3.omega * link3.omega + r4x * link4.omega * link4.omega - constraint4[0]
+    t4y = r3y * link3.omega * link3.omega + r4y * link4.omega * link4.omega - constraint4[1]
+
+    damp1 = link1.omega * 0.05
+    damp2 = link2.omega * 0.05
+    damp3 = link3.omega * 0.05
+    damp4 = link4.omega * 0.05
+
+    bottom = link4.posn - r4 - 0.2
+
+    penalty = 80.0*(ground.posn[1] - bottom[1]) - 20.0* link4.vel[1]
+    if ground.posn[1] > bottom[1]:
+        ground.color = [1,0,0]
+    else:
+        ground.color = [0.6, 0.4, 0.2]
+        penalty = 0
+    # print(penalty)
+
+    #                1      2      3      4        A      B       C        D
+    a = np.array([[1,0,0, 0,0,0, 0,0,0, 0,0,0,   -1,0,   1,0,    0,0,    0,0], #1
+                  [0,1,0, 0,0,0, 0,0,0, 0,0,0,   0,-1,   0,1,    0,0,    0,0],
+                  [0,0,I, 0,0,0, 0,0,0, 0,0,0, r1y,-r1x,r1y,-r1x,0,0,    0,0],
+                  [0,0,0, 1,0,0, 0,0,0, 0,0,0,    0,0,  -1,0,    1,0,    0,0], #2
+                  [0,0,0, 0,1,0, 0,0,0, 0,0,0,    0,0,  0,-1,    0,1,    0,0],
+                  [0,0,0, 0,0,I, 0,0,0, 0,0,0,    0,0,r2y,-r2x,r2y,-r2x, 0,0],
+                  [0,0,0, 0,0,0, 1,0,0, 0,0,0,    0,0,   0,0,   -1,0,    1,0], #3
+                  [0,0,0, 0,0,0, 0,1,0, 0,0,0,    0,0,   0,0,   0,-1,    0,1],
+                  [0,0,0, 0,0,0, 0,0,I, 0,0,0,    0,0,   0,0,r3y,-r3x,r3y,-r3x],
+                  [0,0,0, 0,0,0, 0,0,0, 1,0,0,    0,0,   0,0,    0,0,   -1,0], #4
+                  [0,0,0, 0,0,0, 0,0,0, 0,1,0,    0,0,   0,0,    0,0,   0,-1],
+                  [0,0,0, 0,0,0, 0,0,0, 0,0,I,    0,0,   0,0,    0,0,r4y,-r4x],
+
+                  [-1,0,r1y,  0,0,0,  0,0,0,  0,0,0,    0,0,   0,0,    0,0,    0,0], #A
+                  [0,-1,-r1x, 0,0,0,  0,0,0,  0,0,0,    0,0,   0,0,    0,0,    0,0],
+                  [-1,0,-r1y, 1,0,-r2y,0,0,0, 0,0,0,    0,0,   0,0,    0,0,    0,0], #B
+                  [0,-1,r1x,  0,1,r2x, 0,0,0, 0,0,0,    0,0,   0,0,    0,0,    0,0],
+                  [0,0,0,   -1,0,-r2y,1,0,-r3y,0,0,0,   0,0,   0,0,    0,0,    0,0], #C
+                  [0,0,0,   0,-1,r2x,0,1,r3x, 0,0,0,    0,0,   0,0,    0,0,    0,0],
+                  [0,0,0,   0,0,0,  -1,0,-r3y,1,0,-r4y, 0,0,   0,0,    0,0,    0,0], #D
+                  [0,0,0,   0,0,0,  0,-1,r3x, 0,1,r4x,  0,0,   0,0,    0,0,    0,0]])
+
+    b = np.array([0,-10,damp1, 0,-10,damp2, 0,-10,damp3, 0,-10+penalty, damp4 - r4x * penalty, t1x,t1y, t2x,t2y, t3x,t3y, t4x,t4y])
+
     x = np.linalg.solve(a, b)
-    #  print(x)   # [ -2.17647059  53.54411765  56.63235294]
 
         #### solve for the equations of motion (simple in this case!)
     acc1 = np.array([x[0], x[1], 0])  ### linear acceleration = [0, -G, 0]
-    acc2 = np.array([0, -10, 0])  ### linear acceleration = [0, -G, 0]
-    omega_dot1 = x[2]  ### assume no angular acceleration
-    omega_dot2 = 0.0  ### assume no angular acceleration
+    acc2 = np.array([x[3], x[4], 0])  ### linear acceleration = [0, -G, 0]
+    acc3 = np.array([x[6], x[7], 0])  ### linear acceleration = [0, -G, 0]
+    acc4 = np.array([x[9], x[10], 0])  ### linear acceleration = [0, -G, 0]
 
+    omega_dot1 = x[2]  ### assume no angular acceleration
+    omega_dot2 = x[5]  ### assume no angular acceleration
+    omega_dot3 = x[8]  ### assume no angular acceleration
+    omega_dot4 = x[11]  ### assume no angular acceleration
 
     #### explicit Euler integration to update the state
     link1.posn += link1.vel * dT
@@ -154,10 +297,62 @@ def SimWorld():
     link1.theta += link1.omega * dT
     link1.omega += omega_dot1 * dT
 
-    # link2.posn += link2.vel * dT
-    # link2.vel += acc2 * dT
-    # link2.theta += link2.omega * dT
-    # link2.omega += omega_dot2 * dT
+    link2.posn += link2.vel * dT
+    link2.vel += acc2 * dT
+    link2.theta += link2.omega * dT
+    link2.omega += omega_dot2 * dT
+
+    link3.posn += link3.vel * dT
+    link3.vel += acc3 * dT
+    link3.theta += link3.omega * dT
+    link3.omega += omega_dot3 * dT
+
+    link4.posn += link4.vel * dT
+    link4.vel += acc4 * dT
+    link4.theta += link4.omega * dT
+    link4.omega += omega_dot4 * dT
+
+#################################
+#######   For Alone:
+#################################
+
+    ra = [0.5 * math.sin(alone.theta), -0.5 * math.cos(alone.theta), 0]
+    rax = ra[0]
+    ray = ra[1]
+
+    dampA = alone.omega * 0.05
+
+    constraintA = 1 * (alone.posn + ra - [0, 0, 0]) + 0.01 * (np.cross([0, 0, alone.omega], ra) - alone.vel)
+    tax = rax * alone.omega * alone.omega - constraintA[0]
+    tay = ray * alone.omega * alone.omega - constraintA[1]
+
+    aa = np.array([[1, 0, 0, -1, 0],
+                   [0, 1, 0, 0, -1],
+                   [0, 0, I, -ray, rax],
+                   [1, 0, -ray, 0, 0],
+                   [0, 1, rax, 0, 0]])
+    ab = np.array([0, -10, dampA, tax, tay])
+    ax = np.linalg.solve(aa, ab)
+
+    accA = np.array([ax[0], ax[1], 0])  ### linear acceleration = [0, -G, 0]
+    omega_dotA = ax[2]  ### assume no angular acceleration
+
+    #### explicit Euler integration to update the state
+    alone.posn += alone.vel * dT
+    alone.vel += accA * dT
+    alone.theta += alone.omega * dT
+    alone.omega += omega_dotA * dT
+
+    # PE = mgh
+    pe = 10*(alone.posn[1] + 1.0)
+    # KE = 0.5(I + md^2)w^2
+    ke = 0.5*(0.25/3.0 + 0.25)*alone.omega*alone.omega
+
+    pBar.size[1] = 0.01* pe
+    pBar.posn[1] = pBar.size[1] * 0.5
+
+    kBar.size[1] = 0.01* ke
+    kBar.posn[1] = pBar.size[1] + kBar.size[1] * 0.5
 
     simTime += dT
 
@@ -171,15 +366,24 @@ def SimWorld():
 #####################################################
 
 def DrawWorld():
-    global link1, link2
+    global link1, link2, link3,link4
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  # Clear The Screen And The Depth Buffer
     glLoadIdentity();
-    gluLookAt(1, 1, 3, 0, 0, 0, 0, 1, 0)
+    gluLookAt(2.5, -2.0, 8.0,   0, -3, 0,    0, 1, 0)
 
     DrawOrigin()
     link1.draw()
-    # link2.draw()
+    link2.draw()
+    link3.draw()
+    link4.draw()
+
+    alone.draw()
+
+    kBar.draw()
+    pBar.draw()
+
+    ground.draw()
 
     glutSwapBuffers()  # swap the buffers to display what was just drawn
 
